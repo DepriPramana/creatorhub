@@ -1,5 +1,5 @@
 {
-  "homepage": "https://DepriPramana.github.io/creatorhub",
+  "homepage": "https://tipsunix.web.id",
   "name": "creatorhub",
   "private": true,
   "version": "1.0.0",
@@ -9,7 +9,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist --cname tipsunix.web.id"
   },
   "dependencies": {
     "@google/genai": "^1.13.0",

@@ -1,4 +1,5 @@
 
+
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { 
     generatePrompts, 
@@ -180,8 +181,12 @@ const PromptGeneratorPage: React.FC = () => {
 
         const pollVideoStatus = async () => {
             try {
-                if (operation.done) {
-                    const uri = operation.response?.generatedVideos?.[0]?.video?.uri;
+                const updatedOperation = await checkVideoGenerationStatus(operation);
+                operation = updatedOperation; // Keep the outer scope variable updated
+
+                if (updatedOperation.done) {
+                    const uri = updatedOperation.response?.generatedVideos?.[0]?.video?.uri;
+
                     if (uri) {
                         setVideoStatusMessage('Video generated! Downloading...');
                         const videoBlob = await fetchVideo(uri);
@@ -190,26 +195,20 @@ const PromptGeneratorPage: React.FC = () => {
                         setVideoStatusMessage('');
                         setIsGeneratingVideo(false);
                     } else {
-                        throw new Error("Video generation completed, but no URI was found.");
+                        const errorDetails = updatedOperation.error ? `API Error: ${JSON.stringify(updatedOperation.error)}` : "No URI found in the final response.";
+                        throw new Error(`Video generation completed but failed. ${errorDetails}`);
                     }
-                    return; // Stop polling
-                }
-                
-                operation = await checkVideoGenerationStatus(operation);
-
-                if(!operation.done) {
+                } else {
+                    // Not done yet, poll again
                     messageIndex = (messageIndex + 1) % videoMessages.length;
                     setVideoStatusMessage(videoMessages[messageIndex]);
-                     // Poll again after delay
                     setTimeout(pollVideoStatus, 10000);
-                } else {
-                     pollVideoStatus(); // re-check immediately if it might be done
                 }
-
-            } catch(pollError) {
-                const errorMessage = pollError instanceof Error ? pollError.message : 'An error occurred during video polling.';
+            } catch (pollError) {
+                const errorMessage = pollError instanceof Error ? pollError.message : 'An error occurred while checking video status.';
                 setError(errorMessage);
                 setIsGeneratingVideo(false);
+                setVideoStatusMessage('');
             }
         };
 

@@ -1,4 +1,5 @@
 
+
 import { GoogleGenAI, Type } from "@google/genai";
 
 // Pesan kesalahan spesifik yang dapat diperiksa oleh UI.
@@ -162,7 +163,12 @@ export const generateImageFromPrompt = async (prompt: string, aspectRatio: strin
     },
   });
 
-  if (response.generatedImages && response.generatedImages.length > 0) {
+  if (
+    response.generatedImages &&
+    response.generatedImages.length > 0 &&
+    response.generatedImages[0].image &&
+    response.generatedImages[0].image.imageBytes
+  ) {
     return response.generatedImages[0].image.imageBytes;
   }
   
@@ -337,7 +343,6 @@ export const generateUnixCommand = async (taskDescription: string): Promise<{ co
 1.  **Analyze the User's Task:** Carefully understand the user's goal from their description: "${taskDescription}".
 2.  **Provide the Command:** Generate the single, most accurate shell command.
 3.  **Provide a Brief Explanation:** Write a concise, one or two-sentence explanation of what the command does and how it works.
-4.  **Safety First:** If the described task is potentially destructive (e.g., involves 'rm -rf /' or other dangerous operations), instead of providing the command, your command should be an 'echo' statement warning the user, and the explanation should describe the potential danger.
 
 **Output Format:**
 - You MUST return a single, valid JSON object with two string keys: "command" and "explanation".

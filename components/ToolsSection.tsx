@@ -5,6 +5,7 @@ import { MagicWandIcon } from './icons/MagicWandIcon';
 import { TagIcon } from './icons/TagIcon';
 import { NewspaperIcon } from './icons/NewspaperIcon';
 import { TerminalIcon } from './icons/TerminalIcon';
+import { VideoCameraIcon } from './icons/VideoCameraIcon';
 
 interface ToolsSectionProps {
   onSelectTool: (tool: string) => void;
@@ -84,6 +85,12 @@ const ToolsSection: React.FC<ToolsSectionProps> = ({ onSelectTool }) => {
             title="AI Unix Command Generator"
             description="Jelaskan tugas dalam bahasa Inggris biasa dan dapatkan perintah Unix/Linux yang sesuai secara instan."
             onClick={() => onSelectTool('unix-command')}
+          />
+          <ToolCard 
+            icon={<VideoCameraIcon className="w-6 h-6" />}
+            title="AI Viral Video Generator"
+            description="Hasilkan ide video viral, skrip, dan aset produksi untuk konten berdurasi pendek."
+            onClick={() => onSelectTool('viral-video-generator')}
           />
         </div>
       </div>

@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
-import Header from './components/Header';
-import HeroSection from './components/HeroSection';
-import ToolsSection from './components/ToolsSection';
-import Footer from './components/Footer';
-import CodeExplainerPage from './pages/CodeExplainerPage';
-import PromptGeneratorPage from './pages/PromptGeneratorPage';
-import MetadataGeneratorPage from './pages/MetadataGeneratorPage';
-import SocialMediaPostGeneratorPage from './pages/SocialMediaPostGeneratorPage';
-import UnixCommandGeneratorPage from './pages/UnixCommandGeneratorPage';
-import ApiKeyManager from './components/ApiKeyManager';
+// Dynamically import the tool components
+const Header = React.lazy(() => import('./components/Header'));
+const HeroSection = React.lazy(() => import('./components/HeroSection'));
+const ToolsSection = React.lazy(() => import('./components/ToolsSection'));
+const Footer = React.lazy(() => import('./components/Footer'));
+const CodeExplainerPage = React.lazy(() => import('./pages/CodeExplainerPage'));
+const PromptGeneratorPage = React.lazy(() => import('./pages/PromptGeneratorPage'));
+const MetadataGeneratorPage = React.lazy(() => import('./pages/MetadataGeneratorPage'));
+const SocialMediaPostGeneratorPage = React.lazy(() => import('./pages/SocialMediaPostGeneratorPage'));
+const UnixCommandGeneratorPage = React.lazy(() => import('./pages/UnixCommandGeneratorPage'));
+const ApiKeyManager = React.lazy(() => import('./components/ApiKeyManager'));
+const ViralVideoGeneratorPage = React.lazy(() => import('./pages/ViralVideoGeneratorPage'));
+
 
 const App: React.FC = () => {
   const [activeTool, setActiveTool] = useState<string | null>(null);
@@ -31,6 +34,8 @@ const App: React.FC = () => {
         return <SocialMediaPostGeneratorPage />;
       case 'unix-command':
         return <UnixCommandGeneratorPage />;
+      case 'viral-video-generator':
+        return <ViralVideoGeneratorPage />;
       default:
         return (
           <>

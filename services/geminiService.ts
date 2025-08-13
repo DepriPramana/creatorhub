@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 
 // Pesan kesalahan spesifik yang dapat diperiksa oleh UI.
@@ -147,6 +148,63 @@ You MUST incorporate the user's specific requirements for style, aspect ratio, a
   }
   return JSON.parse(jsonString);
 };
+
+// --- Image & Video Generation ---
+export const generateImageFromPrompt = async (prompt: string, aspectRatio: string): Promise<string> => {
+  const ai = getAiClient();
+  const response = await ai.models.generateImages({
+    model: 'imagen-3.0-generate-002',
+    prompt: prompt,
+    config: {
+      numberOfImages: 1,
+      outputMimeType: 'image/jpeg',
+      aspectRatio: aspectRatio as "1:1" | "16:9" | "9:16" | "4:3" | "3:4",
+    },
+  });
+
+  if (response.generatedImages && response.generatedImages.length > 0) {
+    return response.generatedImages[0].image.imageBytes;
+  }
+  
+  throw new Error("Gagal menghasilkan gambar.");
+};
+
+// The 'operation' object returned by the SDK doesn't have an easily importable type, so 'any' is used here for practicality.
+export const startVideoGeneration = async (prompt: string, imageBase64: string): Promise<any> => {
+  const ai = getAiClient();
+  
+  const operation = await ai.models.generateVideos({
+    model: 'veo-2.0-generate-001',
+    prompt: prompt,
+    image: {
+      imageBytes: imageBase64,
+      mimeType: 'image/jpeg',
+    },
+    config: {
+      numberOfVideos: 1
+    }
+  });
+
+  return operation;
+};
+
+export const checkVideoGenerationStatus = async (operation: any): Promise<any> => {
+    const ai = getAiClient();
+    return await ai.operations.getVideosOperation({ operation: operation });
+};
+
+export const fetchVideo = async (uri: string): Promise<Blob> => {
+    const apiKey = localStorage.getItem('google-api-key');
+    if (!apiKey) {
+        throw new Error(API_KEY_ERROR_MESSAGE);
+    }
+    const response = await fetch(`${uri}&key=${apiKey}`);
+    if (!response.ok) {
+        throw new Error("Gagal mengunduh video.");
+    }
+    return response.blob();
+};
+
 
 // --- Metadata Generator ---
 export interface MetadataSettings {
@@ -481,7 +539,7 @@ export const generateProductionAssets = async (narrative: VideoNarrativeResponse
 **Input Script:**
 ${narrativeString}
 
-**Output Format:** You MUST return a single, valid JSON array of objects. Each object represents a script segment and must have the following string keys: "segment_name" (e.g., "HOOK"), "timestamp" (e.g., "Seconds 0-5", translated to the language of ${country}), "narrator_script" (The narration text, which MUST be identical to the input script for that segment), "text_to_image_prompt" (A detailed prompt for an image generator, **in English**), and "image_to_video_prompt" (A detailed prompt for an animation/video generator, **in English**).
+**Output Format:** You MUST return a single, valid JSON array of objects. Each object represents a script segment and must have the following string keys: "segment_name" (e.g., "HOOK"), "timestamp" (e.g., "Seconds 0-5", translated to the language of ${country}), "narrator_script" (The narration text, which MUST be in the language of ${country} and be identical to the input script for that segment), "text_to_image_prompt" (A detailed prompt for an image generator, **in English**), and "image_to_video_prompt" (A detailed prompt for an animation/video generator, **in English**).
 
 **Constraints:**
 -   \`text_to_image_prompt\` and \`image_to_video_prompt\` must be in ENGLISH.

@@ -12,6 +12,7 @@ import {
 import { MagicWandIcon } from '../components/icons/MagicWandIcon';
 import PromptOutputBlock from '../components/PromptOutputBlock';
 import { CameraIcon, VideoCameraIcon } from '../components/icons/VideoCameraIcon';
+import { DownloadIcon } from '../components/icons/DownloadIcon';
 
 
 const artStyleOptions = [
@@ -33,6 +34,17 @@ const artStyleOptions = [
   'Custom',
 ];
 
+const imageModels = [
+    { id: 'imagen-4.0-generate-preview-06-06', name: 'Imagen 4 (Preview)' },
+    { id: 'imagen-4.0-ultra-generate-preview-06-06', name: 'Imagen 4 Ultra (Preview)' },
+    { id: 'imagen-3.0-generate-002', name: 'Imagen 3.0 002 model' },
+];
+
+const videoModels = [
+    { id: 'veo-3.0-generate-preview', name: 'VEO 3.0 (Preview)' },
+    { id: 'veo-2.0-generate-001', name: 'VEO 2.0' },
+];
+
 const PromptGeneratorPage: React.FC = () => {
   const [inputMode, setInputMode] = useState<'text' | 'image'>('text');
   
@@ -44,6 +56,8 @@ const PromptGeneratorPage: React.FC = () => {
   const [style, setStyle] = useState(artStyleOptions[0]);
   const [aspectRatio, setAspectRatio] = useState('1:1');
   const [duration, setDuration] = useState('15');
+  const [veoModel, setVeoModel] = useState(videoModels[0].id);
+  const [imageModel, setImageModel] = useState(imageModels[2].id);
   
   const [imagePrompt, setImagePrompt] = useState('');
   const [videoPrompt, setVideoPrompt] = useState('');
@@ -147,7 +161,7 @@ const PromptGeneratorPage: React.FC = () => {
     setGeneratedVideoUrl(null);
     setError(null);
     try {
-        const imageB64 = await generateImageFromPrompt(imagePrompt, aspectRatio);
+        const imageB64 = await generateImageFromPrompt(imagePrompt, aspectRatio, imageModel);
         setGeneratedImage(imageB64);
     } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Terjadi kesalahan yang tidak diketahui.';
@@ -156,6 +170,22 @@ const PromptGeneratorPage: React.FC = () => {
         setIsGeneratingImage(false);
     }
   };
+
+  const handleDownloadImage = useCallback(() => {
+    if (!generatedImage) return;
+
+    const link = document.createElement('a');
+    link.href = `data:image/jpeg;base64,${generatedImage}`;
+    
+    // Create a filename from the concept.
+    const safeConcept = concept.replace(/[^a-z0-9\s]/gi, '').substring(0, 30).trim().replace(/\s+/g, '_');
+    const filename = safeConcept || 'ai_generated_image';
+    link.download = `${filename}.jpeg`;
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, [generatedImage, concept]);
 
   const handleGenerateVideo = async () => {
     if (!videoPrompt || !generatedImage) return;
@@ -177,7 +207,7 @@ const PromptGeneratorPage: React.FC = () => {
     setVideoStatusMessage(videoMessages[messageIndex]);
 
     try {
-        let operation = await startVideoGeneration(videoPrompt, generatedImage);
+        let operation = await startVideoGeneration(videoPrompt, generatedImage, veoModel);
 
         const pollVideoStatus = async () => {
             try {
@@ -233,6 +263,21 @@ const PromptGeneratorPage: React.FC = () => {
         className="w-full p-2 bg-slate-900 border border-slate-600 rounded-md text-slate-200 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-300"
       >
         {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+      </select>
+    </div>
+  );
+  
+  const renderModelSelect = (id: string, label: string, value: string, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void, options: {id: string, name: string}[]) => (
+    <div>
+      <label htmlFor={id} className="block text-sm font-medium text-slate-300 mb-2">{label}</label>
+      <select 
+        id={id} 
+        value={value} 
+        onChange={onChange}
+        disabled={isLoading}
+        className="w-full p-2 bg-slate-900 border border-slate-600 rounded-md text-slate-200 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-300"
+      >
+        {options.map(opt => <option key={opt.id} value={opt.id}>{opt.name}</option>)}
       </select>
     </div>
   );
@@ -346,12 +391,12 @@ const PromptGeneratorPage: React.FC = () => {
             )}
             
             <h3 className="text-xl font-bold text-white mt-6 mb-4">2. Sesuaikan Opsi Anda</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="md:col-span-1">
-                {renderSelect('styleSelect', 'Gaya Seni', styleSelection, handleStyleSelectionChange, artStyleOptions)}
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {renderSelect('styleSelect', 'Gaya Seni', styleSelection, handleStyleSelectionChange, artStyleOptions)}
               {renderSelect('aspectRatioSelect', 'Rasio Aspek Gambar', aspectRatio, (e) => setAspectRatio(e.target.value), ['1:1', '16:9', '9:16', '4:3', '3:4'])}
+              {renderModelSelect('imageModelSelect', 'Model Gambar', imageModel, (e) => setImageModel(e.target.value), imageModels)}
               {renderSelect('durationSelect', 'Durasi Video (detik)', duration, (e) => setDuration(e.target.value), ['5', '10', '15', '30', '60'])}
+              {renderModelSelect('veoModelSelect', 'Model Video', veoModel, (e) => setVeoModel(e.target.value), videoModels)}
             </div>
             {styleSelection === 'Custom' && (
               <div className="mt-4">
@@ -425,6 +470,18 @@ const PromptGeneratorPage: React.FC = () => {
                                     <p className="text-slate-500 italic">Gambar yang dihasilkan akan muncul di sini.</p>
                                 )}
                             </div>
+                            {generatedImage && !isGeneratingImage && (
+                                <div className="flex flex-col sm:flex-row gap-4">
+                                    <button onClick={handleGenerateImage} className="w-full flex items-center justify-center gap-2 bg-indigo-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-600 transition-colors">
+                                        <MagicWandIcon className="w-5 h-5"/>
+                                        <span>Hasilkan Ulang</span>
+                                    </button>
+                                    <button onClick={handleDownloadImage} className="w-full flex items-center justify-center gap-2 bg-green-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-700 transition-colors">
+                                        <DownloadIcon className="w-5 h-5"/>
+                                        <span>Unduh Gambar</span>
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         {/* Video Section */}

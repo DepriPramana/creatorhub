@@ -151,10 +151,10 @@ You MUST incorporate the user's specific requirements for style, aspect ratio, a
 };
 
 // --- Image & Video Generation ---
-export const generateImageFromPrompt = async (prompt: string, aspectRatio: string): Promise<string> => {
+export const generateImageFromPrompt = async (prompt: string, aspectRatio: string, modelName: string): Promise<string> => {
   const ai = getAiClient();
   const response = await ai.models.generateImages({
-    model: 'imagen-3.0-generate-002',
+    model: modelName,
     prompt: prompt,
     config: {
       numberOfImages: 1,
@@ -163,12 +163,7 @@ export const generateImageFromPrompt = async (prompt: string, aspectRatio: strin
     },
   });
 
-  if (
-    response.generatedImages &&
-    response.generatedImages.length > 0 &&
-    response.generatedImages[0].image &&
-    response.generatedImages[0].image.imageBytes
-  ) {
+  if (response.generatedImages && response.generatedImages.length > 0) {
     return response.generatedImages[0].image.imageBytes;
   }
   
@@ -176,11 +171,11 @@ export const generateImageFromPrompt = async (prompt: string, aspectRatio: strin
 };
 
 // The 'operation' object returned by the SDK doesn't have an easily importable type, so 'any' is used here for practicality.
-export const startVideoGeneration = async (prompt: string, imageBase64: string): Promise<any> => {
+export const startVideoGeneration = async (prompt: string, imageBase64: string, modelName: string): Promise<any> => {
   const ai = getAiClient();
   
   const operation = await ai.models.generateVideos({
-    model: 'veo-2.0-generate-001',
+    model: modelName,
     prompt: prompt,
     image: {
       imageBytes: imageBase64,

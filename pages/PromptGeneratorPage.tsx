@@ -443,8 +443,18 @@ const PromptGeneratorPage: React.FC = () => {
         <div className="mt-8">
            {error && !isLoading && <div role="alert" className="bg-red-500/20 border border-red-500 text-red-300 p-4 rounded-md mb-6">{error}</div>}
            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-             <PromptOutputBlock title="Prompt Gambar" prompt={imagePrompt} isLoading={isLoading} />
-             <PromptOutputBlock title="Prompt Video" prompt={videoPrompt} isLoading={isLoading} isMarkdown={true} />
+             <PromptOutputBlock 
+                title="Prompt Gambar" 
+                prompt={imagePrompt} 
+                isLoading={isLoading} 
+                onPromptChange={setImagePrompt}
+             />
+             <PromptOutputBlock 
+                title="Prompt Video" 
+                prompt={videoPrompt} 
+                isLoading={isLoading} 
+                onPromptChange={setVideoPrompt}
+             />
            </div>
         </div>
 
